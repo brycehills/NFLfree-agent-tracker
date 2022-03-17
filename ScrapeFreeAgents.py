@@ -1,9 +1,13 @@
+from json.encoder import JSONEncoder
 from bs4 import BeautifulSoup
 import numpy as np
 from urllib.request import urlopen as request
 import requests
 from bs4 import BeautifulSoup as soup
 import pandas as pd
+from operator import itemgetter
+import json
+
 
 url = "https://www.spotrac.com/nfl/free-agents/"
 
@@ -20,17 +24,19 @@ names=[]
 for item in soup.find_all("td", {"class" : "player"})[:100]:
         names.append(item.text)
 
-print(names)
-#insert names into pd df at row 1
+r = requests.get(url)
+df_list = pd.read_html(r.text) # parse html table to list
+print(df_list)
+#df_list.append(names)
 
-#r = requests.get(url)
-#df_list = pd.read_html(r.text) # parse html table to list
+#iterate over list of dfs and convert to json objects
+df_list_json= []
+length = len(df_list)
+for i in range(length):
+    df_list_json.append(df_list[i].to_json())
 
-#attempt ot grab nested player name data
-#print(df_list)
-
-#print(df_list)
-#df = df_list[0]
-#print(df)
-
-
+jsonStr = json.dumps(df_list_json)
+json_names_str = json.dumps(names)
+with open("output.txt", 'w') as outfile:
+    outfile.write(json_names_str)
+    outfile.write(jsonStr)
